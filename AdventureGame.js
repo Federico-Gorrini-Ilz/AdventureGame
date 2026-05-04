@@ -175,8 +175,19 @@ function getItemsByType(type) {
  */
 function getBestItem(type) {
     let items = getItemsByType(type);
-    if (items.length === 0) return null;
-    return items.reduce((best, item) => item.effect > best.effect ? item : best);
+
+    if (items.length === 0) {
+        return null;
+    }
+
+    let bestItem = items[0];
+    items.forEach((item) => {
+        if (item.effect > bestItem.effect) {
+            bestItem = item;
+        }
+    });
+
+    return bestItem;
 }
 
 /**
@@ -202,14 +213,21 @@ function hasGoodEquipment() {
  * @param {boolean} isDragon Whether this is the dragon battle
  * @returns {boolean} true if player wins, false if they retreat
  */
-function handleCombat(isDragon = false) {
-    let enemyName = isDragon ? "dragon" : "monster";
-    let enemyHealth = isDragon ? 50 : 20;
-    let enemyDamage = isDragon ? 20 : 10;
+function handleCombat(isDragon) {
+    let enemyName = "monster";
+    let enemyHealth = 20;
+    let enemyDamage = 10;
+
+    if (isDragon === true) {
+        enemyName = "dragon";
+        enemyHealth = 50;
+        enemyDamage = 20;
+    }
+
     let weapon = getBestItem("weapon");
     let armor = getBestItem("armor");
     
-    if (isDragon && !hasGoodEquipment()) {
+    if (isDragon === true && !hasGoodEquipment()) {
         console.log("You need the Steel Sword and any armor to defeat the dragon!");
         return false;
     }
@@ -217,23 +235,38 @@ function handleCombat(isDragon = false) {
     if (weapon) {
         console.log("You attack with your " + weapon.name + "!");
         console.log("You use " + weapon.name + " for " + weapon.effect + " damage.");
-        console.log(armor ? "You use " + armor.name + " for " + armor.effect + " protection." : "You have no armor.");
+
+        if (armor) {
+            console.log("You use " + armor.name + " for " + armor.effect + " protection.");
+        } else {
+            console.log("You have no armor.");
+        }
 
         while (enemyHealth > 0 && playerHealth > 0) {
             enemyHealth -= weapon.effect;
             console.log("You deal " + weapon.effect + " damage!");
 
             if (enemyHealth > 0) {
-                let damageTaken = Math.max(1, enemyDamage - (armor ? armor.effect : 0));
+                let damageTaken = enemyDamage;
+
+                if (armor) {
+                    damageTaken = enemyDamage - armor.effect;
+                    if (damageTaken < 1) {
+                        damageTaken = 1;
+                    }
+                    console.log("Your armor blocks " + (enemyDamage - damageTaken) + " damage.");
+                }
+
                 console.log("The " + enemyName + " attacks for " + enemyDamage + " damage.");
-                if (armor) console.log("Your armor blocks " + (enemyDamage - damageTaken) + " damage.");
                 updateHealth(-damageTaken);
             }
         }
 
-        if (playerHealth <= 0) return false;
+        if (playerHealth <= 0) {
+            return false;
+        }
 
-        if (isDragon) {
+        if (isDragon === true) {
             console.log("\nVictory! You defeated the dragon and saved the kingdom!");
             showStatus();
             gameRunning = false;
@@ -244,8 +277,16 @@ function handleCombat(isDragon = false) {
         return true;
     } else {
         console.log("Without a weapon, you must retreat!");
-        let damageTaken = Math.max(1, enemyDamage - (armor ? armor.effect : 0));
-        if (armor) console.log("Your armor blocks " + (enemyDamage - damageTaken) + " damage.");
+        let damageTaken = enemyDamage;
+
+        if (armor) {
+            damageTaken = enemyDamage - armor.effect;
+            if (damageTaken < 1) {
+                damageTaken = 1;
+            }
+            console.log("Your armor blocks " + (enemyDamage - damageTaken) + " damage.");
+        }
+
         updateHealth(-damageTaken);
         return false;
     }
