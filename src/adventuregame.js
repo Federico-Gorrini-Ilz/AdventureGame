@@ -2,456 +2,544 @@
 // The Dragon's Quest - Text Adventure Game
 // A progression-based learning project
 // ===========================================
-/*
-Adventure Game
-This game is a text-based adventure where the player makes choices
-that affect the outcome of the game.
-*/
 
-// Import readline-sync to get user input
-const readlineSync = require("readline-sync");
+// Include readline for player input
+const readline = require('readline-sync');
 
-// Display the game title
+// Game state variables
+let gameRunning = true;
+let playerName = "";
+let playerHealth = 100;
+let playerGold = 20;  // Starting gold
+let currentLocation = "village";
+
+// Weapon damage (starts at 0 until player buys a sword)
+let weaponDamage = 0;      // Base weapon damage
+let monsterDefense = 5;    // Monster's defense value
+let healingPotionValue = 30;  // How much health is restored
+
+// =========================================
+// START Lab: Enhanced Item System
+// =========================================
+// Item templates with properties
+const healthPotion = {
+    name: "Health Potion",
+    type: "potion",
+    value: 5,     // Cost in gold
+    effect: 30,   // Healing amount
+    description: "Restores 30 health points"
+};
+
+const sword = {
+    name: "Sword",
+    type: "weapon",
+    value: 10,    // Cost in gold
+    effect: 10,   // Damage amount
+    description: "A sturdy blade for combat"
+};
+
+// Create empty inventory array (from previous lab)
+let inventory = [];  // Will now store item objects instead of strings
+
+// ===========================
+// Display Functions
+// Functions that show game information to the player
+// ===========================
+
+/**
+ * Shows the player's current stats
+ * Displays health, gold, and current location
+ */
+function showStatus() {
+    console.log("\n=== " + playerName + "'s Status ===");
+    console.log("❤️  Health: " + playerHealth);
+    console.log("💰 Gold: " + playerGold);
+    console.log("📍 Location: " + currentLocation);
+    
+    // Enhanced inventory display with item details
+    console.log("🎒 Inventory: ");
+    if (inventory.length === 0) {
+        console.log("   Nothing in inventory");
+    } else {
+        inventory.forEach((item, index) => {
+            console.log("   " + (index + 1) + ". " + item.name + " - " + item.description);
+        });
+    }
+}
+
+/**
+ * Shows the current location's description and available choices
+ */
+function showLocation() {
+    console.log("\n=== " + currentLocation.toUpperCase() + " ===");
+    
+    if (currentLocation === "village") {
+        console.log("You're in a bustling village. The blacksmith and market are nearby.");
+        console.log("\nWhat would you like to do?");
+        console.log("1: Go to blacksmith");
+        console.log("2: Go to market");
+        console.log("3: Enter forest");
+        console.log("4: Check status");
+        console.log("5: Use item");
+        console.log("6: Help");
+        console.log("7: Quit game");
+    } 
+    else if (currentLocation === "blacksmith") {
+        console.log("The heat from the forge fills the air. Weapons and armor line the walls.");
+        console.log("\nWhat would you like to do?");
+        console.log("1: Buy sword (" + sword.value + " gold)");
+        console.log("2: Return to village");
+        console.log("3: Check status");
+        console.log("4: Use item");
+        console.log("5: Help");
+        console.log("6: Quit game");
+    }
+    else if (currentLocation === "market") {
+        console.log("Merchants sell their wares from colorful stalls. A potion seller catches your eye.");
+        console.log("\nWhat would you like to do?");
+        console.log("1: Buy potion (" + healthPotion.value + " gold)");
+        console.log("2: Return to village");
+        console.log("3: Check status");
+        console.log("4: Use item");
+        console.log("5: Help");
+        console.log("6: Quit game");
+    }
+    else if (currentLocation === "forest") {
+        console.log("The forest is dark and foreboding. You hear strange noises all around you.");
+        console.log("\nWhat would you like to do?");
+        console.log("1: Return to village");
+        console.log("2: Check status");
+        console.log("3: Use item");
+        console.log("4: Help");
+        console.log("5: Quit game");
+    }
+}
+
+// ===========================
+// Combat Functions
+// Functions that handle battles and health
+// ===========================
+
+/**
+ * Checks if player has an item of specified type 
+ * @param {string} type The type of item to check for
+ * @returns {boolean} True if player has the item type
+ */
+function hasItemType(type) {
+    return inventory.some(item => item.type === type);
+}
+
+/**
+ * Handles monster battles
+ * Checks if player has weapon and manages combat results
+ * @returns {boolean} true if player wins, false if they retreat
+ */
+function handleCombat() {
+    // Updated to check for item type instead of specific string
+    if (hasItemType("weapon")) {
+        // Find the weapon to get its properties
+        let weapon = inventory.find(item => item.type === "weapon");
+        console.log("You attack with your " + weapon.name + "!");
+        console.log("You deal " + weapon.effect + " damage!");
+        console.log("Victory! You found 10 gold!");
+        playerGold += 10;
+        return true;
+    } else {
+        console.log("Without a weapon, you must retreat!");
+        updateHealth(-20);
+        return false;
+    }
+}
+
+/**
+ * Updates player health, keeping it between 0 and 100
+ * @param {number} amount Amount to change health by (positive for healing, negative for damage)
+ * @returns {number} The new health value
+ */
+function updateHealth(amount) {
+    playerHealth += amount;
+    
+    if (playerHealth > 100) {
+        playerHealth = 100;
+        console.log("You're at full health!");
+    }
+    if (playerHealth < 0) {
+        playerHealth = 0;
+        console.log("You're gravely wounded!");
+    }
+    
+    console.log("Health is now: " + playerHealth);
+    return playerHealth;
+}
+
+// ===========================
+// Item Functions
+// Functions that handle item usage and inventory
+// ===========================
+
+/**
+ * Handles using items like potions
+ * @returns {boolean} true if item was used successfully, false if not
+ */
+function useItem() {
+    if (inventory.length === 0) {
+        console.log("\nYou have no items!");
+        return false;
+    }
+
+    console.log("\n=== Inventory ===");
+    inventory.forEach((item, index) => {
+        console.log((index + 1) + ". " + item.name);
+    });
+    
+    let choice = readline.question("Use which item? (number or 'cancel'): ");
+    if (choice === 'cancel') return false;
+    
+    let index = parseInt(choice) - 1;
+    if (index >= 0 && index < inventory.length) {
+        let item = inventory[index];
+        
+        if (item.type === "potion") {
+            console.log("\nYou drink the " + item.name + ".");
+            updateHealth(item.effect);
+            inventory.splice(index, 1);
+            console.log("Health restored to: " + playerHealth);
+            return true;
+        } else if (item.type === "weapon") {
+            console.log("\nYou ready your " + item.name + " for battle.");
+            return true;
+        }
+    } else {
+        console.log("\nInvalid item number!");
+    }
+    return false;
+}
+
+/**
+ * Displays the player's inventory
+ */
+function checkInventory() {
+    console.log("\n=== INVENTORY ===");
+    if (inventory.length === 0) {
+        console.log("Your inventory is empty!");
+        return;
+    }
+    
+    // Display all inventory items with numbers and descriptions
+    inventory.forEach((item, index) => {
+        console.log((index + 1) + ". " + item.name + " - " + item.description);
+    });
+}
+
+// ===========================
+// Shopping Functions
+// Functions that handle buying items
+// ===========================
+
+/**
+ * Handles purchasing items at the blacksmith
+ */
+function buyFromBlacksmith() {
+    if (playerGold >= sword.value) {
+        console.log("\nBlacksmith: 'A fine blade for a brave adventurer!'");
+        playerGold -= sword.value;
+        
+        // Add sword object to inventory instead of just the name
+        inventory.push({...sword}); // Create a copy of the sword object
+        
+        console.log("You bought a " + sword.name + " for " + sword.value + " gold!");
+        console.log("Gold remaining: " + playerGold);
+    } else {
+        console.log("\nBlacksmith: 'Come back when you have more gold!'");
+    }
+}
+
+/**
+ * Handles purchasing items at the market
+ */
+function buyFromMarket() {
+    if (playerGold >= healthPotion.value) {
+        console.log("\nMerchant: 'This potion will heal your wounds!'");
+        playerGold -= healthPotion.value;
+        
+        // Add potion object to inventory instead of just the name
+        inventory.push({...healthPotion}); // Create a copy of the potion object
+        
+        console.log("You bought a " + healthPotion.name + " for " + healthPotion.value + " gold!");
+        console.log("Gold remaining: " + playerGold);
+    } else {
+        console.log("\nMerchant: 'No gold, no potion!'");
+    }
+}
+
+// ===========================
+// Help System
+// Provides information about available commands
+// ===========================
+
+/**
+ * Shows all available game commands and how to use them
+ */
+function showHelp() {
+    console.log("\n=== AVAILABLE COMMANDS ===");
+    
+    console.log("\nMovement Commands:");
+    console.log("- In the village, choose 1-3 to travel to different locations");
+    console.log("- In other locations, choose the return option to go back to the village");
+    
+    console.log("\nBattle Information:");
+    console.log("- You need a weapon to win battles");
+    console.log("- Weapons have different damage values");
+    console.log("- Monsters appear in the forest");
+    console.log("- Without a weapon, you'll lose health when retreating");
+    
+    console.log("\nItem Usage:");
+    console.log("- Health potions restore health based on their effect value");
+    console.log("- You can buy potions at the market for " + healthPotion.value + " gold");
+    console.log("- You can buy a sword at the blacksmith for " + sword.value + " gold");
+    
+    console.log("\nOther Commands:");
+    console.log("- Choose the status option to see your health and gold");
+    console.log("- Choose the help option to see this message again");
+    console.log("- Choose the quit option to end the game");
+    
+    console.log("\nTips:");
+    console.log("- Keep healing potions for dangerous areas");
+    console.log("- Defeat monsters to earn gold");
+    console.log("- Health can't go above 100");
+}
+
+// ===========================
+// Movement Functions
+// Functions that handle player movement
+// ===========================
+
+/**
+ * Handles movement between locations
+ * @param {number} choiceNum The chosen option number
+ * @returns {boolean} True if movement was successful
+ */
+function move(choiceNum) {
+    let validMove = false;
+    
+    if (currentLocation === "village") {
+        if (choiceNum === 1) {
+            currentLocation = "blacksmith";
+            console.log("\nYou enter the blacksmith's shop.");
+            validMove = true;
+        }
+        else if (choiceNum === 2) {
+            currentLocation = "market";
+            console.log("\nYou enter the market.");
+            validMove = true;
+        }
+        else if (choiceNum === 3) {
+            currentLocation = "forest";
+            console.log("\nYou venture into the forest...");
+            validMove = true;
+            
+            // Trigger combat when entering forest
+            console.log("\nA monster appears!");
+            if (!handleCombat()) {
+                currentLocation = "village";
+            }
+        }
+    }
+    else if (currentLocation === "blacksmith") {
+        if (choiceNum === 2) {
+            currentLocation = "village";
+            console.log("\nYou return to the village center.");
+            validMove = true;
+        }
+    }
+    else if (currentLocation === "market") {
+        if (choiceNum === 2) {
+            currentLocation = "village";
+            console.log("\nYou return to the village center.");
+            validMove = true;
+        }
+    }
+    else if (currentLocation === "forest") {
+        if (choiceNum === 1) {
+            currentLocation = "village";
+            console.log("\nYou hurry back to the safety of the village.");
+            validMove = true;
+        }
+    }
+    
+    return validMove;
+}
+
+// ===========================
+// Input Validation
+// Functions that validate player input
+// ===========================
+
+/**
+ * Validates if a choice number is within valid range
+ * @param {string} input The user input to validate
+ * @param {number} max The maximum valid choice number
+ * @returns {boolean} True if choice is valid
+ */
+function isValidChoice(input, max) {
+    if (input === "") return false;
+    let num = parseInt(input);
+    return num >= 1 && num <= max;
+}
+
+// ===========================
+// Main Game Loop
+// Controls the flow of the game
+// ===========================
+
 console.log("=================================");
 console.log("       The Dragon's Quest        ");
 console.log("=================================");
-console.log("Welcome to the Adventure Game!");
-console.log("Prepare yourself for an epic journey!");
+console.log("\nYour quest: Defeat the dragon in the mountains!");
 
-// Get player name
-let playerName = readlineSync.question("What is your name, adventurer? ");
+// Get player's name
+playerName = readline.question("\nWhat is your name, brave adventurer? ");
+console.log("\nWelcome, " + playerName + "!");
+console.log("You start with " + playerGold + " gold.");
 
-// Greet the player
-console.log("Welcome, " + playerName + "! Your adventure begins now.");
-
-// Define player stats
-let health = 100;
-let gold = 20;
-let location = "village";
-let gameRunning = true;
-let inventory = [];
-
-// Battle variables
-let weaponDamage = 0;
-let monsterDefense = 5;
-let healingPotionValue = 30;
-
-// Game progress variables
-let hasSword = false;
-let hasKey = false;
-let dragonDefeated = false;
-
-// Display welcome message and starting stats
-console.log("\nStarting Stats:");
-console.log("Health: " + health);
-console.log("Gold: " + gold);
-console.log("Location: " + location);
-console.log("Inventory: " + inventory.length + " items");
-
-// =========================================
-// START Lab: Battle Calculator
-// =========================================
-console.log("\nStarting weapon damage: " + weaponDamage);
-console.log("When you buy a sword, weapon damage will increase to 10!");
-
-console.log("Monster defense: " + monsterDefense);
-console.log("Monsters can withstand some damage in combat!");
-
-console.log("Healing potion value: " + healingPotionValue);
-console.log("A potion will restore 30 health!");
-// =========================================
-// END Lab: Battle Calculator
-// =========================================
-
-// Main game loop
 while (gameRunning) {
-  console.log("\n=================================");
-  console.log("Current Location: " + location);
-  console.log("Health: " + health);
-  console.log("Gold: " + gold);
-  console.log("Inventory: " + inventory.join(", "));
-  console.log("=================================");
-
-  if (health <= 0) {
-    console.log("\nYou have fallen in battle.");
-    console.log("Game Over.");
-    gameRunning = false;
-    break;
-  }
-
-  if (dragonDefeated) {
-    console.log("\nCongratulations, " + playerName + "!");
-    console.log("You defeated the dragon and saved the kingdom!");
-    console.log("You win!");
-    gameRunning = false;
-    break;
-  }
-
-  if (location === "village") {
-    showVillageMenu();
-  } else if (location === "shop") {
-    showShopMenu();
-  } else if (location === "forest") {
-    showForestMenu();
-  } else if (location === "cave") {
-    showCaveMenu();
-  } else if (location === "castle") {
-    showCastleMenu();
-  } else {
-    console.log("Unknown location. Returning to the village.");
-    location = "village";
-  }
-}
-
-// ===========================================
-// Location Menus
-// ===========================================
-
-function showVillageMenu() {
-  console.log("\nYou are in the village square.");
-  console.log("1. Go to the shop");
-  console.log("2. Travel to the forest");
-  console.log("3. Travel to the cave");
-  console.log("4. Travel to the castle");
-  console.log("5. Use a healing potion");
-  console.log("6. Quit game");
-
-  let choice = readlineSync.question("What would you like to do? ");
-
-  if (choice === "1") {
-    location = "shop";
-  } else if (choice === "2") {
-    location = "forest";
-  } else if (choice === "3") {
-    location = "cave";
-  } else if (choice === "4") {
-    location = "castle";
-  } else if (choice === "5") {
-    useHealingPotion();
-  } else if (choice === "6") {
-    console.log("\nThank you for playing The Dragon's Quest!");
-    gameRunning = false;
-  } else {
-    console.log("Invalid choice. Please try again.");
-  }
-}
-
-function showShopMenu() {
-  console.log("\nYou enter the village shop.");
-  console.log("The shopkeeper greets you warmly.");
-  console.log("1. Buy sword - 15 gold");
-  console.log("2. Buy healing potion - 10 gold");
-  console.log("3. Return to village");
-
-  let choice = readlineSync.question("What would you like to do? ");
-
-  if (choice === "1") {
-    buySword();
-  } else if (choice === "2") {
-    buyPotion();
-  } else if (choice === "3") {
-    location = "village";
-  } else {
-    console.log("Invalid choice. Please try again.");
-  }
-}
-
-function showForestMenu() {
-  console.log("\nYou enter the dark forest.");
-  console.log("You hear strange noises between the trees.");
-  console.log("1. Explore the forest");
-  console.log("2. Search for treasure");
-  console.log("3. Return to village");
-
-  let choice = readlineSync.question("What would you like to do? ");
-
-  if (choice === "1") {
-    fightMonster("Goblin", 30, 8, 10);
-  } else if (choice === "2") {
-    searchForestTreasure();
-  } else if (choice === "3") {
-    location = "village";
-  } else {
-    console.log("Invalid choice. Please try again.");
-  }
-}
-
-function showCaveMenu() {
-  console.log("\nYou stand before a cold, shadowy cave.");
-  console.log("1. Enter deeper into the cave");
-  console.log("2. Search the cave entrance");
-  console.log("3. Return to village");
-
-  let choice = readlineSync.question("What would you like to do? ");
-
-  if (choice === "1") {
-    fightMonster("Cave Troll", 50, 12, 20);
-  } else if (choice === "2") {
-    searchCave();
-  } else if (choice === "3") {
-    location = "village";
-  } else {
-    console.log("Invalid choice. Please try again.");
-  }
-}
-
-function showCastleMenu() {
-  console.log("\nYou arrive at the ancient castle.");
-  console.log("The dragon waits inside.");
-
-  if (!hasKey) {
-    console.log("The castle gate is locked. You need a key.");
-    location = "village";
-    return;
-  }
-
-  console.log("1. Enter the castle and face the dragon");
-  console.log("2. Return to village");
-
-  let choice = readlineSync.question("What would you like to do? ");
-
-  if (choice === "1") {
-    fightDragon();
-  } else if (choice === "2") {
-    location = "village";
-  } else {
-    console.log("Invalid choice. Please try again.");
-  }
-}
-
-// ===========================================
-// Shop Functions
-// ===========================================
-
-function buySword() {
-  if (hasSword) {
-    console.log("You already have a sword.");
-    return;
-  }
-
-  if (gold >= 15) {
-    gold -= 15;
-    hasSword = true;
-    weaponDamage = 10;
-    inventory.push("Sword");
-
-    console.log("\nYou bought a sword!");
-    console.log("Weapon damage increased to " + weaponDamage + ".");
-  } else {
-    console.log("\nYou do not have enough gold.");
-  }
-}
-
-function buyPotion() {
-  if (gold >= 10) {
-    gold -= 10;
-    inventory.push("Healing Potion");
-
-    console.log("\nYou bought a healing potion.");
-  } else {
-    console.log("\nYou do not have enough gold.");
-  }
-}
-
-// ===========================================
-// Inventory Functions
-// ===========================================
-
-function useHealingPotion() {
-  let potionIndex = inventory.indexOf("Healing Potion");
-
-  if (potionIndex === -1) {
-    console.log("\nYou do not have any healing potions.");
-    return;
-  }
-
-  if (health >= 100) {
-    console.log("\nYour health is already full.");
-    return;
-  }
-
-  inventory.splice(potionIndex, 1);
-  health += healingPotionValue;
-
-  if (health > 100) {
-    health = 100;
-  }
-
-  console.log("\nYou used a healing potion.");
-  console.log("Your health is now " + health + ".");
-}
-
-// ===========================================
-// Exploration Functions
-// ===========================================
-
-function searchForestTreasure() {
-  console.log("\nYou search beneath the roots of an ancient tree.");
-
-  let randomGold = Math.floor(Math.random() * 11) + 5;
-  gold += randomGold;
-
-  console.log("You found " + randomGold + " gold!");
-}
-
-function searchCave() {
-  console.log("\nYou search the cave entrance carefully.");
-
-  if (!hasKey) {
-    hasKey = true;
-    inventory.push("Castle Key");
-
-    console.log("You found a Castle Key!");
-    console.log("You can now enter the castle.");
-  } else {
-    console.log("You find nothing new.");
-  }
-}
-
-// ===========================================
-// Battle Functions
-// ===========================================
-
-function fightMonster(monsterName, monsterHealth, monsterAttack, rewardGold) {
-  console.log("\nA " + monsterName + " appears!");
-
-  while (monsterHealth > 0 && health > 0) {
-    console.log("\nYour Health: " + health);
-    console.log(monsterName + " Health: " + monsterHealth);
-    console.log("1. Attack");
-    console.log("2. Use healing potion");
-    console.log("3. Run away");
-
-    let choice = readlineSync.question("What will you do? ");
-
-    if (choice === "1") {
-      let playerDamage = calculatePlayerDamage();
-      monsterHealth -= playerDamage;
-
-      if (monsterHealth < 0) {
-        monsterHealth = 0;
-      }
-
-      console.log("\nYou attack the " + monsterName + "!");
-      console.log("You deal " + playerDamage + " damage.");
-
-      if (monsterHealth > 0) {
-        let damageTaken = calculateMonsterDamage(monsterAttack);
-        health -= damageTaken;
-
-        console.log("The " + monsterName + " attacks you!");
-        console.log("You take " + damageTaken + " damage.");
-      }
-    } else if (choice === "2") {
-      useHealingPotion();
-
-      if (monsterHealth > 0) {
-        let damageTaken = calculateMonsterDamage(monsterAttack);
-        health -= damageTaken;
-
-        console.log("The " + monsterName + " attacks while you recover!");
-        console.log("You take " + damageTaken + " damage.");
-      }
-    } else if (choice === "3") {
-      console.log("\nYou run back to the village.");
-      location = "village";
-      return;
-    } else {
-      console.log("Invalid choice. Please try again.");
+    // Show current location and choices
+    showLocation();
+    
+    // Get and validate player choice
+    let validChoice = false;
+    while (!validChoice) {
+        try {
+            let choice = readline.question("\nEnter choice (number): ");
+            
+            // Check for empty input
+            if (choice.trim() === "") {
+                throw "Please enter a number!";
+            }
+            
+            // Convert to number and check if it's a valid number
+            let choiceNum = parseInt(choice);
+            if (isNaN(choiceNum)) {
+                throw "That's not a number! Please enter a number.";
+            }
+            
+            // Handle choices based on location
+            if (currentLocation === "village") {
+                if (choiceNum < 1 || choiceNum > 7) {
+                    throw "Please enter a number between 1 and 7.";
+                }
+                
+                validChoice = true;
+                
+                if (choiceNum <= 3) {
+                    move(choiceNum);
+                }
+                else if (choiceNum === 4) {
+                    showStatus();
+                }
+                else if (choiceNum === 5) {
+                    useItem();
+                }
+                else if (choiceNum === 6) {
+                    showHelp();
+                }
+                else if (choiceNum === 7) {
+                    gameRunning = false;
+                    console.log("\nThanks for playing!");
+                }
+            }
+            else if (currentLocation === "blacksmith") {
+                if (choiceNum < 1 || choiceNum > 6) {
+                    throw "Please enter a number between 1 and 6.";
+                }
+                
+                validChoice = true;
+                
+                if (choiceNum === 1) {
+                    buyFromBlacksmith();
+                }
+                else if (choiceNum === 2) {
+                    move(choiceNum);
+                }
+                else if (choiceNum === 3) {
+                    showStatus();
+                }
+                else if (choiceNum === 4) {
+                    useItem();
+                }
+                else if (choiceNum === 5) {
+                    showHelp();
+                }
+                else if (choiceNum === 6) {
+                    gameRunning = false;
+                    console.log("\nThanks for playing!");
+                }
+            }
+            else if (currentLocation === "market") {
+                if (choiceNum < 1 || choiceNum > 6) {
+                    throw "Please enter a number between 1 and 6.";
+                }
+                
+                validChoice = true;
+                
+                if (choiceNum === 1) {
+                    buyFromMarket();
+                }
+                else if (choiceNum === 2) {
+                    move(choiceNum);
+                }
+                else if (choiceNum === 3) {
+                    showStatus();
+                }
+                else if (choiceNum === 4) {
+                    useItem();
+                }
+                else if (choiceNum === 5) {
+                    showHelp();
+                }
+                else if (choiceNum === 6) {
+                    gameRunning = false;
+                    console.log("\nThanks for playing!");
+                }
+            }
+            else if (currentLocation === "forest") {
+                if (choiceNum < 1 || choiceNum > 5) {
+                    throw "Please enter a number between 1 and 5.";
+                }
+                
+                validChoice = true;
+                
+                if (choiceNum === 1) {
+                    move(choiceNum);
+                }
+                else if (choiceNum === 2) {
+                    showStatus();
+                }
+                else if (choiceNum === 3) {
+                    useItem();
+                }
+                else if (choiceNum === 4) {
+                    showHelp();
+                }
+                else if (choiceNum === 5) {
+                    gameRunning = false;
+                    console.log("\nThanks for playing!");
+                }
+            }
+            
+        } catch (error) {
+            console.log("\nError: " + error);
+            console.log("Please try again!");
+        }
     }
-  }
 
-  if (health > 0) {
-    console.log("\nYou defeated the " + monsterName + "!");
-    console.log("You earned " + rewardGold + " gold.");
-
-    gold += rewardGold;
-  }
-}
-
-function fightDragon() {
-  console.log("\nYou enter the castle throne room.");
-  console.log("The dragon rises before you!");
-
-  if (!hasSword) {
-    console.log("\nYou face the dragon without a sword.");
-    console.log("The dragon is too powerful.");
-    health = 0;
-    return;
-  }
-
-  let dragonHealth = 100;
-  let dragonAttack = 18;
-  let dragonDefense = 8;
-
-  while (dragonHealth > 0 && health > 0) {
-    console.log("\nYour Health: " + health);
-    console.log("Dragon Health: " + dragonHealth);
-    console.log("1. Attack");
-    console.log("2. Use healing potion");
-    console.log("3. Retreat");
-
-    let choice = readlineSync.question("What will you do? ");
-
-    if (choice === "1") {
-      let playerDamage = calculatePlayerDamage() - dragonDefense;
-
-      if (playerDamage < 1) {
-        playerDamage = 1;
-      }
-
-      dragonHealth -= playerDamage;
-
-      if (dragonHealth < 0) {
-        dragonHealth = 0;
-      }
-
-      console.log("\nYou strike the dragon!");
-      console.log("You deal " + playerDamage + " damage.");
-
-      if (dragonHealth > 0) {
-        let damageTaken = calculateMonsterDamage(dragonAttack);
-        health -= damageTaken;
-
-        console.log("The dragon breathes fire!");
-        console.log("You take " + damageTaken + " damage.");
-      }
-    } else if (choice === "2") {
-      useHealingPotion();
-
-      if (dragonHealth > 0) {
-        let damageTaken = calculateMonsterDamage(dragonAttack);
-        health -= damageTaken;
-
-        console.log("The dragon attacks while you heal!");
-        console.log("You take " + damageTaken + " damage.");
-      }
-    } else if (choice === "3") {
-      console.log("\nYou retreat from the castle.");
-      location = "village";
-      return;
-    } else {
-      console.log("Invalid choice. Please try again.");
+    // Check if player died
+    if (playerHealth <= 0) {
+        console.log("\nGame Over! Your health reached 0!");
+        gameRunning = false;
     }
-  }
-
-  if (health > 0) {
-    dragonDefeated = true;
-  }
 }
 
-function calculatePlayerDamage() {
-  let baseDamage = Math.floor(Math.random() * 11) + 5;
-  let totalDamage = baseDamage + weaponDamage - monsterDefense;
-
-  if (totalDamage < 1) {
-    totalDamage = 1;
-  }
-
-  return totalDamage;
-}
-
-function calculateMonsterDamage(monsterAttack) {
-  let damage = Math.floor(Math.random() * monsterAttack) + 1;
-  return damage;
-}
+// =========================================
+// END Lab: Enhanced Item System
+// =========================================
