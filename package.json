@@ -1,0 +1,12 @@
+{
+  "name": "dragons-quest",
+  "version": "1.0.0",
+  "description": "A text-based JavaScript adventure game",
+  "main": "src/adventuregame.js",
+  "scripts": {
+    "start": "node src/adventuregame.js"
+  },
+  "dependencies": {
+    "readline-sync": "^1.4.10"
+  }
+}
