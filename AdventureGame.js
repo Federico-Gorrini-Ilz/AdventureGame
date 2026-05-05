@@ -3,8 +3,21 @@
 // A progression-based learning project
 // ===========================================
 
-// Include readline for player input
-const readline = require('readline-sync');
+// Lazy-load readline for player input
+let readline;
+
+// const { exec } = require("child_process");
+
+function getReadline() {
+    if (!readline) {
+        readline = require("readline-sync");
+    }
+    return readline;
+}
+
+// function openImage(imagePath) {
+//     exec(`start "" "${imagePath}"`);
+// }
 
 // Game state variables
 let gameRunning = true;
@@ -98,6 +111,8 @@ function showLocation() {
     console.log("\n=== " + currentLocation.toUpperCase() + " ===");
     
     if (currentLocation === "village") {
+        console.log("Open image: assets/village.png");
+        
         console.log("You're in a bustling village. The blacksmith and market are nearby.");
         console.log("\nWhat would you like to do?");
         console.log("1: Go to blacksmith");
@@ -110,6 +125,8 @@ function showLocation() {
         console.log("8: Quit game");
     } 
     else if (currentLocation === "blacksmith") {
+        console.log("Open image: assets/blacksmith.png");
+
         console.log("The heat from the forge fills the air. Weapons and armor line the walls.");
         console.log("\nWhat would you like to do?");
         console.log("1: Buy sword (" + sword.value + " gold) - " + sword.description);
@@ -123,6 +140,8 @@ function showLocation() {
         console.log("9: Quit game");
     }
     else if (currentLocation === "market") {
+        console.log("Open image: assets/market.png");
+
         console.log("Merchants sell their wares from colorful stalls. A potion seller catches your eye.");
         console.log("\nWhat would you like to do?");
         console.log("1: Buy potion (" + healthPotion.value + " gold)");
@@ -133,6 +152,8 @@ function showLocation() {
         console.log("6: Quit game");
     }
     else if (currentLocation === "forest") {
+        console.log("Open image: assets/forest.png");
+
         console.log("The forest is dark and foreboding. You hear strange noises all around you.");
         console.log("\nWhat would you like to do?");
         console.log("1: Fight monster");
@@ -143,6 +164,8 @@ function showLocation() {
         console.log("6: Quit game");
     }
     else if (currentLocation === "mountains") {
+        console.log("Open image: assets/mountains.png");
+
         console.log("The mountain air is cold. The dragon waits nearby.");
         console.log("\nWhat would you like to do?");
         console.log("1: Face the dragon");
@@ -213,15 +236,21 @@ function hasGoodEquipment() {
  * @param {boolean} isDragon Whether this is the dragon battle
  * @returns {boolean} true if player wins, false if they retreat
  */
-function handleCombat(isDragon) {
+function handleCombat(isDragon = false) {
     let enemyName = "monster";
     let enemyHealth = 20;
     let enemyDamage = 10;
 
     if (isDragon === true) {
+        console.log("Open image: assets/face_the_dragon.png");
+        // openImage("assets/face_the_dragon.png");
+
         enemyName = "dragon";
         enemyHealth = 50;
         enemyDamage = 20;
+    } else {
+        console.log("Open image: assets/forest_monster.png");
+        // openImage("assets/forest_monster.png");
     }
 
     let weapon = getBestItem("weapon");
@@ -268,6 +297,9 @@ function handleCombat(isDragon) {
         }
 
         if (isDragon === true) {
+            console.log("Open image: assets/dragon_victory.png");
+            // openImage("assets/dragon_victory.png");
+            
             console.log("Victory! You defeated the dragon and saved the kingdom!");
             console.log("Final stats:");
             showStatus();
@@ -335,7 +367,7 @@ function useItem() {
         console.log((index + 1) + ". " + item.name);
     });
     
-    let choice = readline.question("Use which item? (number or 'cancel'): ");
+    let choice = getReadline().question("Use which item? (number or 'cancel'): ");
     if (choice === 'cancel') return false;
     
     let index = parseInt(choice) - 1;
@@ -474,28 +506,26 @@ function move(choiceNum) {
         if (choiceNum === 1) {
             currentLocation = "blacksmith";
             console.log("\nYou enter the blacksmith's shop.");
+            // openImage("assets/blacksmith.png");
             validMove = true;
         }
         else if (choiceNum === 2) {
             currentLocation = "market";
             console.log("\nYou enter the market.");
+            // openImage("assets/market.png");
             validMove = true;
         }
         else if (choiceNum === 3) {
             currentLocation = "forest";
             console.log("\nYou venture into the forest...");
+            // openImage("assets/forest.png");
             validMove = true;
-            
-            // Trigger combat when entering forest
-            console.log("\nA monster appears!");
-            if (!handleCombat()) {
-                currentLocation = "village";
-            }
         }
         else if (choiceNum === 4) {
             if (hasGoodEquipment()) {
                 currentLocation = "mountains";
                 console.log("\nYou travel to the mountains...");
+                // openImage("assets/mountains.png");
                 validMove = true;
             } else {
                 console.log("You should get the Steel Sword and some armor before going to the mountains.");
@@ -546,9 +576,15 @@ function move(choiceNum) {
  * @returns {boolean} True if choice is valid
  */
 function isValidChoice(input, max) {
-    if (input === "") return false;
-    let num = parseInt(input);
-    return num >= 1 && num <= max;
+    let inputString = String(input).trim();
+
+    if (inputString === "") {
+        return false;
+    }
+
+    let num = Number(inputString);
+
+    return Number.isInteger(num) && num >= 1 && num <= max;
 }
 
 // ===========================
@@ -556,183 +592,210 @@ function isValidChoice(input, max) {
 // Controls the flow of the game
 // ===========================
 
-console.log("=================================");
-console.log("       The Dragon's Quest        ");
-console.log("=================================");
-console.log("\nYour quest: Defeat the dragon in the mountains!");
+function startGame() {
+    console.log("=================================");
+    console.log("       THE DRAGON'S QUEST        ");
+    console.log("=================================");
+    console.log("\nYour quest: Defeat the dragon in the mountains!");
 
-// Get player's name
-playerName = readline.question("\nWhat is your name, brave adventurer? ");
-console.log("\nWelcome, " + playerName + "!");
-console.log("You start with " + playerGold + " gold.");
+    console.log("Open image: assets/quest_begins.png");
+    // openImage("assets/quest_begins.png");
 
-while (gameRunning) {
-    // Show current location and choices
-    showLocation();
-    
-    // Get and validate player choice
-    let validChoice = false;
-    while (!validChoice) {
-        try {
-            let choice = readline.question("\nEnter choice (number): ");
-            
-            // Check for empty input
-            if (choice.trim() === "") {
-                throw "Please enter a number!";
+    // Get player's name
+    playerName = getReadline().question("\nWhat is your name, brave adventurer? ");
+
+    console.log("\n=================================");
+    console.log("          YOUR QUEST BEGINS      ");
+    console.log("=================================");
+    console.log("\nWelcome, " + playerName + "!");
+    console.log("You start with " + playerGold + " gold.");
+
+    while (gameRunning) {
+        // Show current location and choices
+        showLocation();
+        
+        // Get and validate player choice
+        let validChoice = false;
+        while (!validChoice) {
+            try {
+                let choice = getReadline().question("\nEnter choice (number): ");
+
+                let maxChoice;
+
+                if (currentLocation === "village") {
+                    maxChoice = 8;
+                } 
+                else if (currentLocation === "blacksmith") {
+                    maxChoice = 9;
+                } 
+                else {
+                    maxChoice = 6;
+                }
+
+                if (!isValidChoice(choice, maxChoice)) {
+                    throw "Please enter a number between 1 and " + maxChoice + ".";
+                }
+
+                let choiceNum = Number(choice);
+                
+                // Handle choices based on location
+                if (currentLocation === "village") {
+                    validChoice = true;
+                    
+                    if (choiceNum <= 4) {
+                        move(choiceNum);
+                    }
+                    else if (choiceNum === 5) {
+                        showStatus();
+                    }
+                    else if (choiceNum === 6) {
+                        useItem();
+                    }
+                    else if (choiceNum === 7) {
+                        showHelp();
+                    }
+                    else if (choiceNum === 8) {
+                        gameRunning = false;
+                        console.log("\nThanks for playing!");
+                    }
+                }
+                else if (currentLocation === "blacksmith") {
+                    validChoice = true;
+                    
+                    if (choiceNum <= 4) {
+                        buyFromBlacksmith(choiceNum);
+                    }
+                    else if (choiceNum === 5) {
+                        move(choiceNum);
+                    }
+                    else if (choiceNum === 6) {
+                        showStatus();
+                    }
+                    else if (choiceNum === 7) {
+                        useItem();
+                    }
+                    else if (choiceNum === 8) {
+                        showHelp();
+                    }
+                    else if (choiceNum === 9) {
+                        gameRunning = false;
+                        console.log("\nThanks for playing!");
+                    }
+                }
+                else if (currentLocation === "market") {
+                    validChoice = true;
+                    
+                    if (choiceNum === 1) {
+                        buyFromMarket();
+                    }
+                    else if (choiceNum === 2) {
+                        move(choiceNum);
+                    }
+                    else if (choiceNum === 3) {
+                        showStatus();
+                    }
+                    else if (choiceNum === 4) {
+                        useItem();
+                    }
+                    else if (choiceNum === 5) {
+                        showHelp();
+                    }
+                    else if (choiceNum === 6) {
+                        gameRunning = false;
+                        console.log("\nThanks for playing!");
+                    }
+                }
+                else if (currentLocation === "forest") {
+                    validChoice = true;
+                    
+                    if (choiceNum === 1) {
+                        handleCombat();
+                    }
+                    else if (choiceNum === 2) {
+                        move(choiceNum);
+                    }
+                    else if (choiceNum === 3) {
+                        showStatus();
+                    }
+                    else if (choiceNum === 4) {
+                        useItem();
+                    }
+                    else if (choiceNum === 5) {
+                        showHelp();
+                    }
+                    else if (choiceNum === 6) {
+                        gameRunning = false;
+                        console.log("\nThanks for playing!");
+                    }
+                }
+                else if (currentLocation === "mountains") {
+                    validChoice = true;
+                    
+                    if (choiceNum === 1) {
+                        handleCombat(true);
+                    }
+                    else if (choiceNum === 2) {
+                        move(choiceNum);
+                    }
+                    else if (choiceNum === 3) {
+                        showStatus();
+                    }
+                    else if (choiceNum === 4) {
+                        useItem();
+                    }
+                    else if (choiceNum === 5) {
+                        showHelp();
+                    }
+                    else if (choiceNum === 6) {
+                        gameRunning = false;
+                        console.log("\nThanks for playing!");
+                    }
+                }
+                
+            } catch (error) {
+                console.log("\nError: " + error);
+                console.log("Please try again!");
             }
-            
-            // Convert to number and check if it's a valid number
-            let choiceNum = parseInt(choice);
-            if (isNaN(choiceNum)) {
-                throw "That's not a number! Please enter a number.";
-            }
-            
-            // Handle choices based on location
-            if (currentLocation === "village") {
-                if (choiceNum < 1 || choiceNum > 8) {
-                    throw "Please enter a number between 1 and 8.";
-                }
-                
-                validChoice = true;
-                
-                if (choiceNum <= 4) {
-                    move(choiceNum);
-                }
-                else if (choiceNum === 5) {
-                    showStatus();
-                }
-                else if (choiceNum === 6) {
-                    useItem();
-                }
-                else if (choiceNum === 7) {
-                    showHelp();
-                }
-                else if (choiceNum === 8) {
-                    gameRunning = false;
-                    console.log("\nThanks for playing!");
-                }
-            }
-            else if (currentLocation === "blacksmith") {
-                if (choiceNum < 1 || choiceNum > 9) {
-                    throw "Please enter a number between 1 and 9.";
-                }
-                
-                validChoice = true;
-                
-                if (choiceNum <= 4) {
-                    buyFromBlacksmith(choiceNum);
-                }
-                else if (choiceNum === 5) {
-                    move(choiceNum);
-                }
-                else if (choiceNum === 6) {
-                    showStatus();
-                }
-                else if (choiceNum === 7) {
-                    useItem();
-                }
-                else if (choiceNum === 8) {
-                    showHelp();
-                }
-                else if (choiceNum === 9) {
-                    gameRunning = false;
-                    console.log("\nThanks for playing!");
-                }
-            }
-            else if (currentLocation === "market") {
-                if (choiceNum < 1 || choiceNum > 6) {
-                    throw "Please enter a number between 1 and 6.";
-                }
-                
-                validChoice = true;
-                
-                if (choiceNum === 1) {
-                    buyFromMarket();
-                }
-                else if (choiceNum === 2) {
-                    move(choiceNum);
-                }
-                else if (choiceNum === 3) {
-                    showStatus();
-                }
-                else if (choiceNum === 4) {
-                    useItem();
-                }
-                else if (choiceNum === 5) {
-                    showHelp();
-                }
-                else if (choiceNum === 6) {
-                    gameRunning = false;
-                    console.log("\nThanks for playing!");
-                }
-            }
-            else if (currentLocation === "forest") {
-                if (choiceNum < 1 || choiceNum > 6) {
-                    throw "Please enter a number between 1 and 6.";
-                }
-                
-                validChoice = true;
-                
-                if (choiceNum === 1) {
-                    handleCombat();
-                }
-                else if (choiceNum === 2) {
-                    move(choiceNum);
-                }
-                else if (choiceNum === 3) {
-                    showStatus();
-                }
-                else if (choiceNum === 4) {
-                    useItem();
-                }
-                else if (choiceNum === 5) {
-                    showHelp();
-                }
-                else if (choiceNum === 6) {
-                    gameRunning = false;
-                    console.log("\nThanks for playing!");
-                }
-            }
-            else if (currentLocation === "mountains") {
-                if (choiceNum < 1 || choiceNum > 6) {
-                    throw "Please enter a number between 1 and 6.";
-                }
-                
-                validChoice = true;
-                
-                if (choiceNum === 1) {
-                    handleCombat(true);
-                }
-                else if (choiceNum === 2) {
-                    move(choiceNum);
-                }
-                else if (choiceNum === 3) {
-                    showStatus();
-                }
-                else if (choiceNum === 4) {
-                    useItem();
-                }
-                else if (choiceNum === 5) {
-                    showHelp();
-                }
-                else if (choiceNum === 6) {
-                    gameRunning = false;
-                    console.log("\nThanks for playing!");
-                }
-            }
-            
-        } catch (error) {
-            console.log("\nError: " + error);
-            console.log("Please try again!");
+        }
+
+        // Check if player died
+        if (playerHealth <= 0) {
+            console.log("\nGame Over! Your health reached 0!");
+            gameRunning = false;
         }
     }
-
-    // Check if player died
-    if (playerHealth <= 0) {
-        console.log("\nGame Over! Your health reached 0!");
-        gameRunning = false;
-    }
 }
+
+// Start the game only when this file is run directly
+if (require.main === module) {
+    startGame();
+}
+
+// Export functions and objects for automated testing
+module.exports = {
+    startGame,
+    healthPotion,
+    sword,
+    woodenShield,
+    steelSword,
+    ironShield,
+    inventory,
+    showStatus,
+    showLocation,
+    getItemsByType,
+    getBestItem,
+    hasItemType,
+    hasGoodEquipment,
+    handleCombat,
+    updateHealth,
+    useItem,
+    checkInventory,
+    buyFromBlacksmith,
+    buyFromMarket,
+    showHelp,
+    move,
+    isValidChoice
+};
 
 // =========================================
 // END Lab: Enhanced Item System

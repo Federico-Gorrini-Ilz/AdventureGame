@@ -6,11 +6,17 @@
 // Lazy-load readline for player input
 let readline;
 
+const { exec } = require("child_process");
+
 function getReadline() {
     if (!readline) {
-        readline = require('readline-sync');
+        readline = require("readline-sync");
     }
     return readline;
+}
+
+function openImage(imagePath) {
+    exec(`start "" "${imagePath}"`);
 }
 
 // Game state variables
@@ -237,12 +243,14 @@ function handleCombat(isDragon = false) {
 
     if (isDragon === true) {
         console.log("Open image: assets/face_the_dragon.png");
-        
+        openImage("assets/face_the_dragon.png");
+
         enemyName = "dragon";
         enemyHealth = 50;
         enemyDamage = 20;
     } else {
         console.log("Open image: assets/forest_monster.png");
+        openImage("assets/forest_monster.png");
     }
 
     let weapon = getBestItem("weapon");
@@ -290,6 +298,7 @@ function handleCombat(isDragon = false) {
 
         if (isDragon === true) {
             console.log("Open image: assets/dragon_victory.png");
+            openImage("assets/dragon_victory.png");
             
             console.log("Victory! You defeated the dragon and saved the kingdom!");
             console.log("Final stats:");
@@ -497,28 +506,26 @@ function move(choiceNum) {
         if (choiceNum === 1) {
             currentLocation = "blacksmith";
             console.log("\nYou enter the blacksmith's shop.");
+            openImage("assets/blacksmith.png");
             validMove = true;
         }
         else if (choiceNum === 2) {
             currentLocation = "market";
             console.log("\nYou enter the market.");
+            openImage("assets/market.png");
             validMove = true;
         }
         else if (choiceNum === 3) {
             currentLocation = "forest";
             console.log("\nYou venture into the forest...");
+            openImage("assets/forest.png");
             validMove = true;
-            
-            // Trigger combat when entering forest
-            console.log("\nA monster appears!");
-            if (!handleCombat()) {
-                currentLocation = "village";
-            }
         }
         else if (choiceNum === 4) {
             if (hasGoodEquipment()) {
                 currentLocation = "mountains";
                 console.log("\nYou travel to the mountains...");
+                openImage("assets/mountains.png");
                 validMove = true;
             } else {
                 console.log("You should get the Steel Sword and some armor before going to the mountains.");
@@ -587,9 +594,12 @@ function isValidChoice(input, max) {
 
 function startGame() {
     console.log("=================================");
-    console.log("       The Dragon's Quest        ");
+    console.log("       THE DRAGON'S QUEST        ");
     console.log("=================================");
     console.log("\nYour quest: Defeat the dragon in the mountains!");
+
+    console.log("Open image: assets/quest_begins.png");
+    openImage("assets/quest_begins.png");
 
     // Get player's name
     playerName = getReadline().question("\nWhat is your name, brave adventurer? ");
@@ -597,8 +607,6 @@ function startGame() {
     console.log("\n=================================");
     console.log("          YOUR QUEST BEGINS      ");
     console.log("=================================");
-    console.log("Open image: assets/quest_begins.png");
-
     console.log("\nWelcome, " + playerName + "!");
     console.log("You start with " + playerGold + " gold.");
 
