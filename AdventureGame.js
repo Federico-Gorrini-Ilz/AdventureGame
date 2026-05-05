@@ -3,6 +3,10 @@
 // A progression-based learning project
 // ===========================================
 
+// NOTE: NODE.JS MUST BE INSTALLED TO RUN THE GRAPHICS.
+// GRAPHICS OPEN USING NODE.JS BUILT-IN child_process.
+// Bash: npm install readline-sync
+
 // Lazy-load readline for player input
 let readline;
 
@@ -597,6 +601,10 @@ function startGame() {
     console.log("       THE DRAGON'S QUEST        ");
     console.log("=================================");
     console.log("\nYour quest: Defeat the dragon in the mountains!");
+
+    console.log("NOTE: NODE.JS MUST BE INSTALLED TO RUN THE GRAPHICS.");
+    console.log("GRAPHICS OPEN USING NODE.JS BUILT-IN child_process.");
+    console.log("Bash: npm install readline-sync");
 
     console.log("Open image: assets/quest_begins.png");
     // openImage("assets/quest_begins.png");
