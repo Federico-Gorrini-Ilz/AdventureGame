@@ -105,6 +105,8 @@ function showLocation() {
     console.log("\n=== " + currentLocation.toUpperCase() + " ===");
     
     if (currentLocation === "village") {
+        console.log("Open image: assets/village.png");
+        
         console.log("You're in a bustling village. The blacksmith and market are nearby.");
         console.log("\nWhat would you like to do?");
         console.log("1: Go to blacksmith");
@@ -117,6 +119,8 @@ function showLocation() {
         console.log("8: Quit game");
     } 
     else if (currentLocation === "blacksmith") {
+        console.log("Open image: assets/blacksmith.png");
+
         console.log("The heat from the forge fills the air. Weapons and armor line the walls.");
         console.log("\nWhat would you like to do?");
         console.log("1: Buy sword (" + sword.value + " gold) - " + sword.description);
@@ -130,6 +134,8 @@ function showLocation() {
         console.log("9: Quit game");
     }
     else if (currentLocation === "market") {
+        console.log("Open image: assets/market.png");
+
         console.log("Merchants sell their wares from colorful stalls. A potion seller catches your eye.");
         console.log("\nWhat would you like to do?");
         console.log("1: Buy potion (" + healthPotion.value + " gold)");
@@ -140,6 +146,8 @@ function showLocation() {
         console.log("6: Quit game");
     }
     else if (currentLocation === "forest") {
+        console.log("Open image: assets/forest.png");
+
         console.log("The forest is dark and foreboding. You hear strange noises all around you.");
         console.log("\nWhat would you like to do?");
         console.log("1: Fight monster");
@@ -150,6 +158,8 @@ function showLocation() {
         console.log("6: Quit game");
     }
     else if (currentLocation === "mountains") {
+        console.log("Open image: assets/mountains.png");
+
         console.log("The mountain air is cold. The dragon waits nearby.");
         console.log("\nWhat would you like to do?");
         console.log("1: Face the dragon");
@@ -226,9 +236,13 @@ function handleCombat(isDragon = false) {
     let enemyDamage = 10;
 
     if (isDragon === true) {
+        console.log("Open image: assets/face_the_dragon.png");
+        
         enemyName = "dragon";
         enemyHealth = 50;
         enemyDamage = 20;
+    } else {
+        console.log("Open image: assets/forest_monster.png");
     }
 
     let weapon = getBestItem("weapon");
@@ -275,6 +289,8 @@ function handleCombat(isDragon = false) {
         }
 
         if (isDragon === true) {
+            console.log("Open image: assets/dragon_victory.png");
+            
             console.log("Victory! You defeated the dragon and saved the kingdom!");
             console.log("Final stats:");
             showStatus();
@@ -577,6 +593,12 @@ function startGame() {
 
     // Get player's name
     playerName = getReadline().question("\nWhat is your name, brave adventurer? ");
+
+    console.log("\n=================================");
+    console.log("          YOUR QUEST BEGINS      ");
+    console.log("=================================");
+    console.log("Open image: assets/quest_begins.png");
+
     console.log("\nWelcome, " + playerName + "!");
     console.log("You start with " + playerGold + " gold.");
 
