@@ -49,17 +49,17 @@ const woodenShield = {
 const steelSword = {
     name: "Steel Sword",
     type: "weapon",
-    value: 25,
-    effect: 20,
-    description: "A stronger blade for tougher enemies"
+    value: 25,    // Cost in gold
+    effect: 20,   // Damage amount
+    description: "A stronger blade for dangerous battles"
 };
 
 const ironShield = {
     name: "Iron Shield",
     type: "armor",
-    value: 18,
-    effect: 10,
-    description: "Provides better protection than a wooden shield"
+    value: 18,    // Cost in gold
+    effect: 10,   // Protection amount
+    description: "A stronger shield with better protection"
 };
 
 // Create empty inventory array (from previous lab)
@@ -98,7 +98,7 @@ function showLocation() {
     console.log("\n=== " + currentLocation.toUpperCase() + " ===");
     
     if (currentLocation === "village") {
-        console.log("You're in a bustling village. The blacksmith, market, forest, and mountain path are nearby.");
+        console.log("You're in a bustling village. The blacksmith and market are nearby.");
         console.log("\nWhat would you like to do?");
         console.log("1: Go to blacksmith");
         console.log("2: Go to market");
@@ -143,7 +143,7 @@ function showLocation() {
         console.log("6: Quit game");
     }
     else if (currentLocation === "mountains") {
-        console.log("The dragon waits in its mountain lair.");
+        console.log("The mountain air is cold. The dragon waits nearby.");
         console.log("\nWhat would you like to do?");
         console.log("1: Face the dragon");
         console.log("2: Return to village");
@@ -160,7 +160,7 @@ function showLocation() {
 // ===========================
 
 /**
- * Gets all items of a specified type
+ * Gets all inventory items of a specified type
  * @param {string} type The type of item to get
  * @returns {Array} All items matching the type
  */
@@ -169,9 +169,9 @@ function getItemsByType(type) {
 }
 
 /**
- * Gets the best item of a specified type
+ * Gets the strongest item of a specified type
  * @param {string} type The type of item to check for
- * @returns {object|null} The best item object, or null if none found
+ * @returns {object|null} The best item, or null if none found
  */
 function getBestItem(type) {
     let items = getItemsByType(type);
@@ -200,7 +200,7 @@ function hasItemType(type) {
 }
 
 /**
- * Checks if player has good enough equipment to face the dragon
+ * Checks if player is ready to face the dragon
  * @returns {boolean} True if player has the steel sword and any armor
  */
 function hasGoodEquipment() {
@@ -228,18 +228,19 @@ function handleCombat(isDragon) {
     let armor = getBestItem("armor");
     
     if (isDragon === true && !hasGoodEquipment()) {
-        console.log("You need the Steel Sword and any armor to defeat the dragon!");
+        console.log("The dragon is too strong right now!");
+        console.log("You need the Steel Sword and any armor before you can win.");
         return false;
     }
 
     if (weapon) {
         console.log("You attack with your " + weapon.name + "!");
-        console.log("You use " + weapon.name + " for " + weapon.effect + " damage.");
+        console.log("Best weapon: " + weapon.name + " (" + weapon.effect + " damage)");
 
         if (armor) {
-            console.log("You use " + armor.name + " for " + armor.effect + " protection.");
+            console.log("Best armor: " + armor.name + " (" + armor.effect + " protection)");
         } else {
-            console.log("You have no armor.");
+            console.log("You have no armor for this fight.");
         }
 
         while (enemyHealth > 0 && playerHealth > 0) {
@@ -267,7 +268,8 @@ function handleCombat(isDragon) {
         }
 
         if (isDragon === true) {
-            console.log("\nVictory! You defeated the dragon and saved the kingdom!");
+            console.log("Victory! You defeated the dragon and saved the kingdom!");
+            console.log("Final stats:");
             showStatus();
             gameRunning = false;
         } else {
@@ -389,7 +391,7 @@ function buyFromBlacksmith(choiceNum) {
     let item = itemsForSale[choiceNum - 1];
 
     if (item && playerGold >= item.value) {
-        console.log("\nBlacksmith: 'A fine choice for a brave adventurer!'" );
+        console.log("Blacksmith: 'A good choice!'" );
         playerGold -= item.value;
         inventory.push({...item});
         console.log("You bought a " + item.name + " for " + item.value + " gold!");
@@ -496,7 +498,7 @@ function move(choiceNum) {
                 console.log("\nYou travel to the mountains...");
                 validMove = true;
             } else {
-                console.log("\nYou need the Steel Sword and any armor before going to the mountains.");
+                console.log("You should get the Steel Sword and some armor before going to the mountains.");
             }
         }
     }
